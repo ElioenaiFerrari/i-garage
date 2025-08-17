@@ -96,7 +96,7 @@
 						}`}
 						onclick={() => (isDrawerOpen = false)}
 					>
-						<svelte:component this={item.icon} class="mr-3" size={20} />
+						<item.icon class="mr-3" size={20} />
 						{item.name}
 					</a>
 				{/each}
@@ -183,7 +183,7 @@
 						}`}
 						onclick={() => (isDrawerOpen = false)}
 					>
-						<svelte:component this={item.icon} class="mr-3" size={20} />
+						<item.icon class="mr-3" size={20} />
 						{item.name}
 					</a>
 				{/each}
