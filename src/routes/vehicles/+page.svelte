@@ -36,12 +36,11 @@
 		<div>
 			<h1 class="mb-2 text-3xl font-bold text-gray-900">Meus Veículos</h1>
 			<p class="text-gray-600">Gerencie sua frota de veículos</p>
-		</div>
-		<div class="mt-4 lg:mt-0">
-			<button
-				on:click={() => goto('/vehicles/new')}
-				class="btn-primary flex items-center space-x-2"
-			>
+		</div>    <div class="mt-4 lg:mt-0">
+      <button
+        onclick={() => goto('/vehicles/new')}
+        class="btn-primary flex items-center space-x-2"
+      >
 				<Plus size={20} />
 				<span>Cadastrar Veículo</span>
 			</button>
@@ -79,11 +78,10 @@
 
 						<div
 							class="invisible absolute top-8 right-0 z-10 w-40 rounded-lg border border-gray-200 bg-white opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:opacity-100"
+						>						<button
+							onclick={() => handleDeleteVehicle(vehicle.id, vehicle.name)}
+							class="flex w-full items-center space-x-2 rounded-lg px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
 						>
-							<button
-								on:click={() => handleDeleteVehicle(vehicle.id, vehicle.name)}
-								class="flex w-full items-center space-x-2 rounded-lg px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-							>
 								<Trash2 size={16} />
 								<span>Excluir</span>
 							</button>
@@ -117,7 +115,7 @@
 				<!-- Action Buttons -->
 				<div class="space-y-3">
 					<button
-						on:click={() => goto(`/vehicles/${vehicle.id}`)}
+						onclick={() => goto(`/vehicles/${vehicle.id}`)}
 						class="btn-primary flex w-full items-center justify-center space-x-2"
 					>
 						<Eye size={16} />
@@ -126,7 +124,7 @@
 
 					<div class="grid grid-cols-2 gap-3">
 						<button
-							on:click={() => goto(`/fuel?vehicle=${vehicle.id}`)}
+							onclick={() => goto(`/fuel?vehicle=${vehicle.id}`)}
 							class="btn-secondary flex items-center justify-center space-x-2 text-sm"
 						>
 							<Fuel size={14} />
@@ -134,7 +132,7 @@
 						</button>
 
 						<button
-							on:click={() => goto(`/maintenance?vehicle=${vehicle.id}`)}
+							onclick={() => goto(`/maintenance?vehicle=${vehicle.id}`)}
 							class="btn-secondary flex items-center justify-center space-x-2 text-sm"
 						>
 							<Wrench size={14} />
@@ -150,8 +148,8 @@
 			class="card-automotive cursor-pointer border-2 border-dashed border-gray-200 transition-colors hover:border-purple-500 {isLoaded
 				? 'subtle-fade-in'
 				: 'opacity-0'}"
-			on:click={() => goto('/vehicles/new')}
-			on:keypress={(e) => e.key === 'Enter' && goto('/vehicles/new')}
+			onclick={() => goto('/vehicles/new')}
+			onkeypress={(e) => e.key === 'Enter' && goto('/vehicles/new')}
 			role="button"
 			tabindex="0"
 		>
@@ -176,7 +174,7 @@
 			<h3 class="mb-2 text-xl font-semibold text-gray-900">Nenhum veículo cadastrado</h3>
 			<p class="mb-6 text-gray-600">Comece cadastrando seu primeiro veículo</p>
 			<button
-				on:click={() => goto('/vehicles/new')}
+				onclick={() => goto('/vehicles/new')}
 				class="btn-primary mx-auto flex items-center space-x-2"
 			>
 				<Plus size={20} />
