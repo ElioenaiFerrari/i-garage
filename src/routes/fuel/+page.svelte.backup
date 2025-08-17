@@ -1,0 +1,413 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { 
+    Fuel, 
+    Plus, 
+    Car,
+    Calendar,
+    DollarSign,
+    Gauge,
+    TrendingUp
+  } from 'lucide-svelte';
+
+  export let data;
+
+  let isLoaded = false;
+  let showAddForm = false;
+  let selectedVehicleId = '';
+
+  // Form data
+  let fuelData = {
+    vehicleId: '',
+    date: new Date().toISOString().split('T')[0],
+    km: 0,
+    value: 0,
+    fuelType: 'gasoline' as 'gasoline' | 'ethanol' | 'diesel' | 'flex',
+    liters: 0
+  };
+
+  const fuelTypes = {
+    gasoline: { name: 'Gasolina', color: 'bg-yellow-600' },
+    ethanol: { name: 'Etanol', color: 'bg-green-600' },
+    diesel: { name: 'Diesel', color: 'bg-blue-600' },
+    flex: { name: 'Flex', color: 'bg-purple-600' }
+  };
+
+  onMount(() => {
+    // Verifica se há um veículo selecionado via query parameter
+    const vehicleParam = $page.url.searchParams.get('vehicle');
+    if (vehicleParam) {
+      selectedVehicleId = vehicleParam;
+      fuelData.vehicleId = vehicleParam;
+      showAddForm = true;
+      
+      // Define a quilometragem atual do veículo selecionado
+      const selectedVehicle = data.vehicles.find(v => v.id === vehicleParam);
+      if (selectedVehicle) {
+        fuelData.km = selectedVehicle.currentKm;
+      }
+    }
+
+    setTimeout(() => {
+      isLoaded = true;
+    }, 100);
+  });
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const formatKm = (km: number) => {
+    return new Intl.NumberFormat('pt-BR').format(km) + ' km';
+  };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('pt-BR').format(new Date(date));
+  };
+
+  const handleSubmit = async () => {
+    // Validações básicas
+    if (!fuelData.vehicleId || !fuelData.date || fuelData.km <= 0 || fuelData.value <= 0) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    // Simula salvamento
+    console.log('Salvando abastecimento:', fuelData);
+    
+    // Reset form
+    fuelData = {
+      vehicleId: '',
+      date: new Date().toISOString().split('T')[0],
+      km: 0,
+      value: 0,
+      fuelType: 'gasoline',
+      liters: 0
+    };
+    
+    showAddForm = false;
+    
+    // Em uma aplicação real, recarregaria os dados
+    alert('Abastecimento registrado com sucesso!');
+  };
+
+  const calculatePricePerLiter = () => {
+    if (fuelData.liters > 0 && fuelData.value > 0) {
+      return fuelData.value / fuelData.liters;
+    }
+    return 0;
+  };
+
+  const updateLitersFromValue = () => {
+    // Calcula litros baseado no valor, usando preço médio do tipo de combustível
+    const avgPrices = {
+      gasoline: 5.60,
+      ethanol: 4.50,
+      diesel: 6.20,
+      flex: 5.30
+    };
+    
+    if (fuelData.value > 0) {
+      fuelData.liters = Number((fuelData.value / avgPrices[fuelData.fuelType]).toFixed(2));
+    }
+  };
+</script>
+
+<div class="space-y-8">
+  <!-- Header -->
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Abastecimentos</h1>
+      <p class="text-gray-600">Controle seus gastos com combustível</p>
+    </div>
+    <div class="mt-4 lg:mt-0">
+      <button
+        on:click={() => showAddForm = !showAddForm}
+        class="btn-primary flex items-center space-x-2"
+      >
+        <Plus size={20} />
+        <span>Registrar Abastecimento</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Add Fuel Form -->
+  {#if showAddForm}
+    <div class="card-automotive subtle-fade-in">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="subtle-fade-in">
+          <Fuel size={32} class="text-purple-600" />
+        </div>
+        <h2 class="text-xl font-bold text-gray-900">Novo Abastecimento</h2>
+      </div>
+
+      <form on:submit|preventDefault={handleSubmit} class="space-y-6">
+        <!-- Vehicle Selection -->
+        <div>
+          <label for="vehicle" class="block text-sm font-medium text-purple-200 mb-2">
+            Veículo *
+          </label>
+          <select
+            id="vehicle"
+            bind:value={fuelData.vehicleId}
+            on:change={() => {
+              const vehicle = data.vehicles.find(v => v.id === fuelData.vehicleId);
+              if (vehicle) fuelData.km = vehicle.currentKm;
+            }}
+            class="input-automotive w-full"
+            required
+          >
+            <option value="">Selecione o veículo</option>
+            {#each data.vehicles as vehicle}
+              <option value={vehicle.id}>{vehicle.name} - {vehicle.brand} {vehicle.model}</option>
+            {/each}
+          </select>
+        </div>
+
+        <!-- Date and KM -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="date" class="block text-sm font-medium text-purple-200 mb-2">
+              Data *
+            </label>
+            <input
+              id="date"
+              type="date"
+              bind:value={fuelData.date}
+              class="input-automotive w-full"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="km" class="block text-sm font-medium text-purple-200 mb-2">
+              Quilometragem *
+            </label>
+            <input
+              id="km"
+              type="number"
+              bind:value={fuelData.km}
+              min="0"
+              step="1"
+              placeholder="Quilometragem atual"
+              class="input-automotive w-full"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Fuel Type and Value -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="fuelType" class="block text-sm font-medium text-purple-200 mb-2">
+              Tipo de Combustível *
+            </label>
+            <select
+              id="fuelType"
+              bind:value={fuelData.fuelType}
+              on:change={updateLitersFromValue}
+              class="input-automotive w-full"
+              required
+            >
+              {#each Object.entries(fuelTypes) as [key, type]}
+                <option value={key}>{type.name}</option>
+              {/each}
+            </select>
+          </div>
+
+          <div>
+            <label for="value" class="block text-sm font-medium text-purple-200 mb-2">
+              Valor Total *
+            </label>
+            <input
+              id="value"
+              type="number"
+              bind:value={fuelData.value}
+              on:input={updateLitersFromValue}
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              class="input-automotive w-full"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Liters and Price per Liter -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="liters" class="block text-sm font-medium text-purple-200 mb-2">
+              Litros
+            </label>
+            <input
+              id="liters"
+              type="number"
+              bind:value={fuelData.liters}
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              class="input-automotive w-full"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-purple-200 mb-2">
+              Preço por Litro
+            </label>
+            <div class="input-automotive w-full bg-purple-800/20 text-gray-600">
+              {formatCurrency(calculatePricePerLiter())}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-6">
+          <button
+            type="button"
+            on:click={() => showAddForm = false}
+            class="btn-secondary w-full sm:w-auto"
+          >
+            Cancelar
+          </button>
+          
+          <button
+            type="submit"
+            class="btn-primary w-full sm:flex-1 flex items-center justify-center space-x-2"
+          >
+            <Fuel size={20} />
+            <span>Registrar Abastecimento</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  {/if}
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <Fuel size={20} class="text-gray-900" />
+          </div>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-600 truncate">
+              Total de Abastecimentos
+            </dt>
+            <dd class="text-lg font-medium text-gray-900">
+              {data.fuelRecords.length}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <DollarSign size={20} class="text-gray-900" />
+          </div>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-600 truncate">
+              Gasto Total
+            </dt>
+            <dd class="text-lg font-medium text-gray-900">
+              {formatCurrency(data.fuelRecords.reduce((acc, record) => acc + record.value, 0))}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+            <TrendingUp size={20} class="text-gray-900" />
+          </div>
+        </div>
+        <div class="ml-5 w-0 flex-1">
+          <dl>
+            <dt class="text-sm font-medium text-gray-600 truncate">
+              Litros Abastecidos
+            </dt>
+            <dd class="text-lg font-medium text-gray-900">
+              {data.fuelRecords.reduce((acc, record) => acc + (record.liters || 0), 0).toFixed(1)}L
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fuel Records List -->
+  <div class="card-automotive">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold text-gray-900">Histórico de Abastecimentos</h2>
+    </div>
+
+    {#if data.fuelRecords.length === 0}
+      <div class="text-center py-12">
+        <div class="subtle-fade-in mx-auto mb-4">
+          <Fuel size={64} class="text-purple-600" />
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Nenhum abastecimento registrado</h3>
+        <p class="text-gray-600 mb-6">Comece registrando seu primeiro abastecimento</p>
+        <button
+          on:click={() => showAddForm = true}
+          class="btn-primary flex items-center space-x-2 mx-auto"
+        >
+          <Plus size={20} />
+          <span>Registrar Primeiro Abastecimento</span>
+        </button>
+      </div>
+    {:else}
+      <div class="space-y-4">
+        {#each data.fuelRecords as record, index}
+          <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-all duration-200 {isLoaded ? 'subtle-fade-in' : 'opacity-0'}" 
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div class="flex items-center space-x-4">
+                <div class="flex-shrink-0">
+                  <div class="w-10 h-10 {fuelTypes[record.fuelType].color} rounded-lg flex items-center justify-center">
+                    <Fuel size={20} class="text-gray-900" />
+                  </div>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900">{record.vehicleName}</h3>
+                  <p class="text-sm text-gray-600">{fuelTypes[record.fuelType].name}</p>
+                  <div class="flex items-center space-x-4 mt-1">
+                    <div class="flex items-center space-x-1 text-xs text-purple-600">
+                      <Calendar size={12} />
+                      <span>{formatDate(record.date)}</span>
+                    </div>
+                    <div class="flex items-center space-x-1 text-xs text-purple-600">
+                      <Gauge size={12} />
+                      <span>{formatKm(record.km)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="mt-4 lg:mt-0 lg:text-right">
+                <p class="text-lg font-bold text-gray-900">{formatCurrency(record.value)}</p>
+                {#if record.liters}
+                  <p class="text-sm text-gray-600">{record.liters}L</p>
+                  {#if record.pricePerLiter}
+                    <p class="text-xs text-purple-600">{formatCurrency(record.pricePerLiter)}/L</p>
+                  {/if}
+                {/if}
+              </div>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
+</div>
